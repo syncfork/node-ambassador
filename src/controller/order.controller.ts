@@ -9,6 +9,7 @@ import {client} from "../index";
 import {User} from "../entity/user.entity";
 import {createTransport} from "nodemailer";
 
+
 export const Orders = async (req: Request, res: Response) => {
     const orders = await getRepository(Order).find({
         where: {complete: true},
@@ -131,7 +132,6 @@ export const ConfirmOrder = async (req: Request, res: Response) => {
     const user = await getRepository(User).findOne(order.user_id);
 
     await client.zIncrBy('rankings', order.ambassador_revenue, user.name);
-
     const transporter = createTransport({
         host: 'host.docker.internal',
         port: 1025
