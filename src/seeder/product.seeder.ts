@@ -10,7 +10,7 @@ createConnection().then(async () => {
         await repository.save({
             title: faker.lorem.words(2),
             description: faker.lorem.words(10),
-            image: faker.image.imageUrl(200,200, '', true),
+            image: 'https://picsum.photos/200/200',
             price: randomInt(10, 100)
         })
     }
