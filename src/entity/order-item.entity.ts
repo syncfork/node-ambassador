@@ -24,4 +24,10 @@ export class OrderItem {
     @ManyToOne(() => Order, order => order.order_items)
     @JoinColumn({name: 'order_id'})
     order: Order;
+
+    /*
+    @ManyToOne(() => Product)
+    @JoinColumn({name: 'product_id'})
+    product: Product;  // Esto añade una relación al producto
+*/
 }

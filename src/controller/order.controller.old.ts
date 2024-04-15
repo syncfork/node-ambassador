@@ -8,7 +8,7 @@ import Stripe from "stripe";
 import {client} from "../index";
 import {User} from "../entity/user.entity";
 import {createTransport} from "nodemailer";
-import producer  from "../kafka/config";
+
 
 export const Orders = async (req: Request, res: Response) => {
     const orders = await getRepository(Order).find({
@@ -27,9 +27,6 @@ export const Orders = async (req: Request, res: Response) => {
 }
 
 export const CreateOrder = async (req: Request, res: Response) => {
-
-    //todo: add validations like total items == 0, etc.
-
     const body = req.body;
 
     const link = await getRepository(Link).findOne({
@@ -106,7 +103,6 @@ export const CreateOrder = async (req: Request, res: Response) => {
 
         res.send(source);
     } catch (e) {
-        //todo: add logging including escential data console.log
         await queryRunner.rollbackTransaction();
 
         return res.status(400).send({
@@ -136,20 +132,26 @@ export const ConfirmOrder = async (req: Request, res: Response) => {
     const user = await getRepository(User).findOne(order.user_id);
 
     await client.zIncrBy('rankings', order.ambassador_revenue, user.name);
-   
-    const value = JSON.stringify({
-        ...order, 
-        admin_revenue: order.total,
-        ambassador_revenue: order.ambassador_revenue
+    const transporter = createTransport({
+        host: 'host.docker.internal',
+        port: 1025
     });
 
-    await producer.connect();
-    await producer.send({
-        topic:"topic_01",
-        messages:[
-            {value}
-        ]
-    })
+    await transporter.sendMail({
+        from: 'from@example.com',
+        to: 'admin@admin.com',
+        subject: 'An order has been completed',
+        html: `Order #${order.id} with a total of $${order.total} has been completed`
+    });
+
+    await transporter.sendMail({
+        from: 'from@example.com',
+        to: order.ambassador_email,
+        subject: 'An order has been completed',
+        html: `You earned $${order.ambassador_revenue} from the link #${order.code}`
+    });
+
+    await transporter.close();
 
     res.send({
         message: 'success'

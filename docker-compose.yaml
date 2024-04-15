@@ -10,6 +10,9 @@ services:
     depends_on:
       - db
       - redis
+      - mailhog
+    networks:
+      - ambassador-network
 
   db:
     image: mysql:8
@@ -23,16 +26,26 @@ services:
       - .dbdata:/var/lib/mysql
     ports:
       - "33066:3306"
+    networks:
+      - ambassador-network
 
   redis:
     container_name: redis
     image: redis
     ports:
       - "6379:6379"
+    networks:
+      - ambassador-network
 
   mailhog:
     container_name: mailhog
     image: mailhog/mailhog
     ports:
       - "1025:1025"      
-      - "8025:8025"    
+      - "8025:8025"
+    networks:
+      - ambassador-network
+
+networks:
+  ambassador-network:
+    external: true
