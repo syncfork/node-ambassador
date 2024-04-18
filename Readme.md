@@ -12,36 +12,11 @@
 - Se debe crear una red para acceder mediante el nombre del host (container_name)
 ```docker network create users-network```
 
-    Pull following images and run container:
-    - redis
-  ```docker pull redis```
-  ```docker run -p 6379:6379 -d --name redis --network my-network redis```
-
-    - mysql
-  ```docker pull mysql```
-  ```docker run -p 3306:3306 -d --name db -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=ambassador --network my-network mysql```
-    - -e MYSQL_ROOT_PASSWORD: el parámetro -e establece una variable de entorno en el container
-    - -e MYSQL_DATABASE=ambassador: crea una bd llamada ambassador
-
-  - mailhog
-    ```docker pull mailhog/mailhog```
-    # Expose the SMTP and HTTP ports: EXPOSE 1025 8025
-    ```docker run -d -p 1025:1025 -p 8025:8025 --name mailhog mailhog/mailhog```
-    
-    Connect: localhost:8025
-
-  Para revisar los datos:
-  - ```docker exec -it db sh```
-   ```mysql -u root -p```
-    ```use db ambassador;```
-     ```select * from product;```
-
-     
 - ambassador backend
  - Update the STRIPE_SECRET en .env  por la private key de stripe: https://dashboard.stripe.com/test/apikeys
  - Crear la imágen
-   ```docker build -t ambassador  .```
-   ```docker rm -f ambassador && docker run -d -p 8000:8000 --name ambassador -d  --network my-network ambassador```
+ 
+   ```docker-compose up```
 
   - Si el ambassador se va a correr localmente se deben cambiar ormconfig.json host:"localhost" o a "db" si va a container
     hacer lo mismo para redis en index.ts y rankings.ts
@@ -52,17 +27,24 @@
       or     
     - ```npm run seed:ambassadors && npm run seed:products && npm run seed:links && npm run seed:orders && npm run update:rankings```
 
-    - react projects
+# TypeOrm
 
-  Si saca error de code: 'ERR_OSSL_EVP_UNSUPPORTED.
+Al tener varias instancias del mismo MS, se debe desactivar:  "synchronize": false en ormconfig.json
 
-    start": "set NODE_OPTIONS=--openssl-legacy-provider "
+ - Crear archivo de migración:
+ ```npx typeorm migration:create -n updateUserAndLink```
 
-    - Next-checjout
-      - Go to stripe to get the publishable key: https://dashboard.stripe.com/test/apikeys
-      - ```npm run dev```
+ - Agregar allí los scripts de up and down
+  - up: se ejecuta cuando se quiere crear tablas nuevas sin perder las existentes, para agregar columnas, inserts, deletes, etc
+    para correr el me´todo up se utiliza: se debe configurar la traspilación    
+    ```npx typeorm migration:run```
 
-# Run docker-compose
+  - down: es lo inverso al up, se usa para revertir cambios, eliminar tablas creadas, revertir datos, cuando hay algún error en migración
+    para ejecutar el down se usa: se debe configurar la traspilación
+    ```npx typeorm migration:revert```
 
-- ```docker network create ambassador-network```
-- 
+  - En una sola réplica del MS correr la migración o en un step del pipeline despues que levante la bd y antes del MS.
+    se corre el scrip typeorm para traspilar el ts
+    ```npm run typeorm migration:run```
+
+- Crear la data: ```npm run seeders```

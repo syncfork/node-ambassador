@@ -2,66 +2,93 @@ import {Request, Response} from "express";
 import {getRepository} from "typeorm";
 import {User} from "../entity/user.entity";
 import bcryptjs from 'bcryptjs';
-import {sign, verify} from "jsonwebtoken";
+import {sign} from "jsonwebtoken";
+import { Counter, collectDefaultMetrics, Registry } from 'prom-client';
+
+const register = new Registry();
 
 export const Register = async (req: Request, res: Response) => {
-    const {password, password_confirm, ...body} = req.body;
+    const {password, password_confirm, first_name, last_name,email, ...body} = req.body;
 
-    if (password !== password_confirm) {
+
+    if (first_name === null || last_name === null || password === null || email == null){
         return res.status(400).send({
-            message: "Password's do not match!"
+            message: "first_name, last_name, password and email are mandatory!"
         })
     }
 
-    const user = await getRepository(User).save({
-        ...body,
-        password: await bcryptjs.hash(password, 10),
-        is_ambassador: req.path === '/api/ambassador/register'
-    });
+    try{
+            
+        if (password !== password_confirm) {
+            return res.status(400).send({
+                message: "Password's do not match!"
+            })
+        }
 
-    delete user.password;
+        const user = await getRepository(User).save({
+            ...body,
+            password: await bcryptjs.hash(password, 10),
+            is_ambassador: req.path === '/api/ambassador/register'
+        });
 
-    res.send(user);
+        delete user.password;
+
+        res.send(user);
+    }catch (error){
+        console.error('Failed to register:', error);      
+        return res.status(500).send({
+            message: 'Internal error on register, try later'
+        }); 
+    }
 }
 
 export const Login = async (req: Request, res: Response) => {
-    const user = await getRepository(User).findOne({email: req.body.email}, {
-        select: ["id", "password", "is_ambassador"]
-    });
 
-    if (!user) {
-        return res.status(400).send({
-            message: 'invalid credentials!'
+    try{
+        const user = await getRepository(User).findOne({email: req.body.email}, {
+            select: ["id", "password", "is_ambassador"]
+        });
+
+        if (!user) {
+            return res.status(400).send({
+                message: 'invalid credentials!'
+            });
+        }
+
+        if (!await bcryptjs.compare(req.body.password, user.password)) {
+            return res.status(400).send({
+                message: 'invalid credentials!'
+            });
+        }
+
+        const adminLogin = req.path === '/api/admin/login';
+
+        if (user.is_ambassador && adminLogin) {
+            return res.status(401).send({
+                message: 'unauthorized'
+            });
+        }
+
+        const token = sign({
+            id: user.id,
+            scope: adminLogin ? "admin" : "ambassador"
+        }, process.env.SECRET_KEY);
+
+        res.cookie("jwt", token, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000//1 day
+        })
+
+        res.send({
+            message: 'success'
         });
     }
-
-    if (!await bcryptjs.compare(req.body.password, user.password)) {
-        return res.status(400).send({
-            message: 'invalid credentials!'
-        });
+    catch(error ){
+        console.error('Failed to login:', error);      
+        return res.status(500).send({
+            message: 'Internal error, try later'
+        });  
     }
-
-    const adminLogin = req.path === '/api/admin/login';
-
-    if (user.is_ambassador && adminLogin) {
-        return res.status(401).send({
-            message: 'unauthorized'
-        });
-    }
-
-    const token = sign({
-        id: user.id,
-        scope: adminLogin ? "admin" : "ambassador"
-    }, process.env.SECRET_KEY);
-
-    res.cookie("jwt", token, {
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000//1 day
-    })
-
-    res.send({
-        message: 'success'
-    });
 }
 
 export const AuthenticatedUser = async (req: Request, res: Response) => {

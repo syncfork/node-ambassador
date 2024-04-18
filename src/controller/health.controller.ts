@@ -1,8 +1,15 @@
 import {Request, Response} from "express";
 import { getManager } from "typeorm";
+import process from 'process'; // process allow access to enviroment variables
+import  os  from 'os';
 
 export const HealthCheck = async (req: Request, res: Response) => {
-    const resp = await getCurrentDate()
+    const currentDate = await getCurrentDate()
+    const resp = {
+        time: currentDate,
+        id: os.hostname()
+    }
+
     res.send(resp);
 }
 

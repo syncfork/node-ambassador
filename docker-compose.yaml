@@ -20,6 +20,7 @@ services:
     environment:
       MYSQL_DATABASE: users_db
       MYSQL_ROOT_PASSWORD: root
+      TZ: 'America/Bogota'
     volumes:
       - .dbdata:/var/lib/mysql
     ports:
