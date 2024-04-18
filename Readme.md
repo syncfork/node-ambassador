@@ -4,12 +4,13 @@
 
 ## Considerations
 
-- La bd tiene un volúmen, entonces se debe borrar si se quieren regenerar datos con una nueva build
+- La bd tiene un volumen, entonces se debe borrar si se quieren regenerar datos con una nueva build (check)
+ delete .dbdata
 
 # Run containers con docker
 
 - Se debe crear una red para acceder mediante el nombre del host (container_name)
-```docker network create ambassador-network```
+```docker network create users-network```
 
     Pull following images and run container:
     - redis
@@ -34,6 +35,7 @@
    ```mysql -u root -p```
     ```use db ambassador;```
      ```select * from product;```
+
      
 - ambassador backend
  - Update the STRIPE_SECRET en .env  por la private key de stripe: https://dashboard.stripe.com/test/apikeys

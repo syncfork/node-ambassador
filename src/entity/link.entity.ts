@@ -1,7 +1,7 @@
 import {Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "./user.entity";
-import {Product} from "./product.entity";
-import {Order} from "./order.entity";
+//import {Product} from "./product.entity";
+//import {Order} from "./order.entity";
 
 @Entity()
 export class Link {
@@ -15,20 +15,14 @@ export class Link {
     @JoinColumn({name: 'user_id'})
     user: User;
 
-    @ManyToMany(() => Product)
+    /* @ManyToMany(() => Product)
     @JoinTable({
         name: 'link_products',
         joinColumn: {name: 'link_id', referencedColumnName: 'id'},
         inverseJoinColumn: {name: 'product_id', referencedColumnName: 'id'}
-    })
-    products: Product[];
-
-    @OneToMany(() => Order, order => order.link, {
-        createForeignKeyConstraints: false
-    })
-    @JoinColumn({
-        referencedColumnName: 'code',
-        name: 'code'
-    })
-    orders: Order[];
+    }) 
+    products: Product[];*/
+  
+    //One to many ref: code, (order.link) manage by event bus
+    //orders: Order[];
 }

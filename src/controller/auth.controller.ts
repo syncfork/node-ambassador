@@ -3,7 +3,6 @@ import {getRepository} from "typeorm";
 import {User} from "../entity/user.entity";
 import bcryptjs from 'bcryptjs';
 import {sign, verify} from "jsonwebtoken";
-import {Order} from "../entity/order.entity";
 
 export const Register = async (req: Request, res: Response) => {
     const {password, password_confirm, ...body} = req.body;
@@ -72,15 +71,16 @@ export const AuthenticatedUser = async (req: Request, res: Response) => {
         return res.send(user);
     }
 
+    /*todo: orquestar desde front o validar si desde back
     const orders = await getRepository(Order).find({
         where: {
             user_id: user.id,
             complete: true
         },
         relations: ['order_items']
-    });
+    });*/
 
-    user.revenue = orders.reduce((s, o) => s + o.ambassador_revenue, 0);
+    //user.revenue = orders.reduce((s, o) => s + o.ambassador_revenue, 0);
 
     res.send(user);
 }
