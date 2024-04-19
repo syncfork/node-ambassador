@@ -20,7 +20,7 @@ export const routes = (router: Router) => {
 
     // Ambassador
     router.post('/api/ambassador/register', Register);
-    router.post('/api/ambassador/login', Login);
+    router.post('/api/users/login', Login);
     router.get('/api/ambassador/user', AuthMiddleware, AuthenticatedUser);
     router.post('/api/ambassador/logout', AuthMiddleware, Logout);
     router.put('/api/ambassador/users/info', AuthMiddleware, UpdateInfo);

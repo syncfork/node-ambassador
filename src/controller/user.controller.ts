@@ -10,6 +10,9 @@ export const Ambassadors = async (req: Request, res: Response) => {
 }
 
 export const Rankings = async (req: Request, res: Response) => {
+
+    //Todo: move this to ranking
+    //+inf,-inf: get elements from higher score to lower score
     const result: string[] = await client.sendCommand(['ZREVRANGEBYSCORE', 'rankings', '+inf', '-inf', 'WITHSCORES']);
     let name;
 
